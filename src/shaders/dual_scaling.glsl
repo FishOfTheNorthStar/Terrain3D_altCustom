@@ -17,21 +17,25 @@ varying float v_far_factor;
 	// If dual scaling, apply to base texture
 	if(region < 0) {
 		matUV *= tri_scale_reduction;
+		uv1_grad *= tri_scale_reduction;
 	}
-	albedo_ht = texture(_texture_array_albedo, vec3(matUV, float(out_mat.base)));
-	normal_rg = texture(_texture_array_normal, vec3(matUV, float(out_mat.base)));
+	vec3 matUVW1 = vec3(matUV, float(out_mat.base));
+	albedo_ht = textureGrad(_texture_array_albedo, matUVW1, uv1_grad.xy, uv1_grad.zw);
+	normal_rg = textureGrad(_texture_array_normal, matUVW1, uv1_grad.xy, uv1_grad.zw);
 	if(out_mat.base == dual_scale_texture || out_mat.over == dual_scale_texture) {
-		albedo_far = texture(_texture_array_albedo, vec3(matUV*dual_scale_reduction, float(dual_scale_texture)));
-		normal_far = texture(_texture_array_normal, vec3(matUV*dual_scale_reduction, float(dual_scale_texture)));
+		vec3 dmatUVW1 = vec3(matUV*dual_scale_reduction, float(dual_scale_texture));
+		vec4 duv1_grad = uv1_grad *dual_scale_reduction;
+		albedo_far = textureGrad(_texture_array_albedo, dmatUVW1, duv1_grad.xy, duv1_grad.zw);
+		normal_far = textureGrad(_texture_array_normal, dmatUVW1, duv1_grad.xy, duv1_grad.zw); 
 	}
 	if(out_mat.base == dual_scale_texture) {
 		albedo_ht = mix(albedo_ht, albedo_far, v_far_factor);
-		normal_rg = mix(normal_rg, normal_far, v_far_factor);
-	}
+		normal_rg = mix(normal_rg, normal_far, v_far_factor); 
+	} 
 
 //INSERT: UNI_SCALING_BASE
-	albedo_ht = texture(_texture_array_albedo, vec3(matUV, float(out_mat.base)));
-	normal_rg = texture(_texture_array_normal, vec3(matUV, float(out_mat.base)));
+	albedo_ht = textureGrad(_texture_array_albedo, vec3(matUV, float(out_mat.base)), uv1_grad.xy, uv1_grad.zw);
+	normal_rg = textureGrad(_texture_array_normal, vec3(matUV, float(out_mat.base)), uv1_grad.xy, uv1_grad.zw);
 
 //INSERT: DUAL_SCALING_OVERLAY
 		// If dual scaling, apply to overlay texture

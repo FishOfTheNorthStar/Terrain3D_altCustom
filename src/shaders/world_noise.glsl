@@ -66,25 +66,28 @@ float world_noise(vec2 p) {
     return a;
 }
 
+float noise_mod(float _orig_height, vec2 _at_uv) {
+	float _weight = texture(_region_blend_map, (_at_uv/float(_region_map_size))+0.5).r;
+	float _rmap_half_size = float(_region_map_size)*.5;
+    vec2 _abs_at_uv = abs(_at_uv);
+    vec2 _minus_half_map_up = max(vec2(0.),_abs_at_uv - (_rmap_half_size+.5));
+    vec2 _minus_half_map_down = max(vec2(0.),_abs_at_uv - (_rmap_half_size-.5));
+    //_weight *= min(1., _minus_half_map_down.x * _minus_half_map_down.y * _minus_half_map_up.x * _minus_half_map_up.y);
+
+	_weight = mix(_weight, 0., _minus_half_map_down.x);
+	_weight = mix(_weight, 0., _minus_half_map_down.y);
+    _weight = mix(_weight, 0., _minus_half_map_up.x);
+    _weight = mix(_weight, 0., _minus_half_map_up.y);
+
+	float _new_height = mix(_orig_height, world_noise((_at_uv+world_noise_offset.xz) * world_noise_scale*.1) *
+        world_noise_height*10. + world_noise_offset.y*100.,
+		clamp(smoothstep(world_noise_blend_near, world_noise_blend_far, 1.0 - _weight), 0.0, 1.0));
+    return _new_height; }
+
 // World Noise end
 
 //INSERT: WORLD_NOISE2
 	// World Noise
    	if(_background_mode == 2u) {
-	    float weight = texture(_region_blend_map, (uv/float(_region_map_size))+0.5).r;
-	    float rmap_half_size = float(_region_map_size)*.5;
-	    if(abs(uv.x) > rmap_half_size+.5 || abs(uv.y) > rmap_half_size+.5) {
-		    weight = 0.;
-	    } else {
-		    if(abs(uv.x) > rmap_half_size-.5) {
-			    weight = mix(weight, 0., abs(uv.x) - (rmap_half_size-.5));
-		    }
-		    if(abs(uv.y) > rmap_half_size-.5) {
-			    weight = mix(weight, 0., abs(uv.y) - (rmap_half_size-.5));
-		    }
-	    }
-	    height = mix(height, world_noise((uv+world_noise_offset.xz) * world_noise_scale*.1) *
-            world_noise_height*10. + world_noise_offset.y*100.,
-		    clamp(smoothstep(world_noise_blend_near, world_noise_blend_far, 1.0 - weight), 0.0, 1.0));
-    }
+        height = noise_mod(height, uv); }
 )"

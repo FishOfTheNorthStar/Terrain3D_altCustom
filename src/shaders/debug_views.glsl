@@ -25,9 +25,10 @@ R"(
 
 //INSERT: DEBUG_HEIGHTMAP
 	// Show heightmap
-	ALBEDO = vec3(smoothstep(-0.1, 2.0, 0.5 + get_height(uv2)/300.0));
+	ALBEDO = vec3(smoothstep(-0.1, 2.0, 0.5 + get_height_grad(uv2 , WORLD_GRAD)/300.0));
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
+	NORMAL = vec3(0.5, 0.5, 1.0);
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
 
 //INSERT: DEBUG_COLORMAP
