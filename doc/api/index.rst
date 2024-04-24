@@ -10,37 +10,14 @@
 All classes
 ===========
 
-Nodes
-=====
-
 .. toctree::
-    :maxdepth: 1
-    :name: toc-class-ref-nodes
+   :maxdepth: 1
+   :caption: Test
 
-    class_node
-    class_terrain3d
-
-Resources
-=========
-
-.. toctree::
-    :maxdepth: 1
-    :name: toc-class-ref-resources
-
-    class_resource
-    class_terrain3dmaterial
-    class_terrain3dstorage
-    class_terrain3dtexture
-    class_terrain3dtexturelist
-
-Other objects
-=============
-
-.. toctree::
-    :maxdepth: 1
-    :name: toc-class-ref-objects
-
-    class_object
-    class_terrain3deditor
-    class_terrain3dutil
-
+   class_terrain3d
+   class_terrain3deditor
+   class_terrain3dmaterial
+   class_terrain3dstorage
+   class_terrain3dtexture
+   class_terrain3dtexturelist
+   class_terrain3d3dutil

@@ -60,6 +60,12 @@
     <ClInclude Include="src\terrain_3d_util.h">
       <Filter>4. Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\__MACROS.h">
+      <Filter>4. Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\__INLINE_HELP_DEFS.h">
+      <Filter>4. Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\geoclipmap.cpp">
@@ -124,9 +130,6 @@
     <None Include="project\addons\terrain_3d\terrain.gdextension">
       <Filter>1. Project Files</Filter>
     </None>
-    <None Include="src\shaders\debug_views.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
     <None Include="src\shaders\main.glsl">
       <Filter>3. Shaders</Filter>
     </None>
@@ -189,6 +192,18 @@
     </None>
     <None Include="doc\docs\storage_format.md">
       <Filter>2. Docs</Filter>
+    </None>
+    <None Include="src\shaders\uv_distortion.glsl">
+      <Filter>3. Shaders</Filter>
+    </None>
+    <None Include="src\shaders\__DEFINES.glsl">
+      <Filter>3. Shaders</Filter>
+    </None>
+    <None Include="src\shaders\__HEADER.glsl">
+      <Filter>3. Shaders</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\tools\debug_view.gdshaderinc">
+      <Filter>3. Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -278,5 +293,10 @@
     <Xml Include="doc\classes\Terrain3DUtil.xml">
       <Filter>2. Docs\XML</Filter>
     </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Xsd Include="class.xsd">
+      <Filter>4. Headers</Filter>
+    </Xsd>
   </ItemGroup>
 </Project>

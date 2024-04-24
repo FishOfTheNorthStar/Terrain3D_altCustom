@@ -151,6 +151,8 @@
     <ClInclude Include="src\terrain_3d_storage.h" />
     <ClInclude Include="src\terrain_3d_texture.h" />
     <ClInclude Include="src\terrain_3d_texture_list.h" />
+    <ClInclude Include="src\__INLINE_HELP_DEFS.h" />
+    <ClInclude Include="src\__MACROS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\generated_tex.cpp" />
@@ -190,13 +192,16 @@
     <None Include="project\addons\terrain_3d\terrain.gdextension" />
     <None Include="README.md" />
     <None Include="SConstruct" />
-    <None Include="src\shaders\debug_views.glsl" />
+    <None Include="project\addons\terrain_3d\tools\debug_view.gdshaderinc" />
+    <None Include="src\shaders\__HEADER.glsl" />
     <None Include="src\shaders\main.glsl" />
     <None Include="src\shaders\uniforms.glsl" />
+    <None Include="src\shaders\uv_distortion.glsl" />
     <None Include="src\shaders\world_noise.glsl" />
     <None Include="src\shaders\editor_functions.glsl" />
     <None Include="src\shaders\dual_scaling.glsl" />
     <None Include="src\shaders\auto_shader.glsl" />
+    <None Include="src\shaders\__DEFINES.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Text Include=".readthedocs.yaml" />
@@ -229,6 +234,9 @@
     <Xml Include="doc\classes\Terrain3DTexture.xml" />
     <Xml Include="doc\classes\Terrain3DTextureList.xml" />
     <Xml Include="doc\classes\Terrain3DUtil.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xsd Include="class.xsd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

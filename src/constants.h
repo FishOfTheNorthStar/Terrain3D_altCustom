@@ -8,6 +8,7 @@
 //////////////////////////////////////
 
 #define RS RenderingServer::get_singleton()
+#define EI EditorInterface::get_singleton()
 
 #define COLOR_NAN Color(NAN, NAN, NAN, NAN)
 #define COLOR_BLACK Color(0.0f, 0.0f, 0.0f, 1.0f)

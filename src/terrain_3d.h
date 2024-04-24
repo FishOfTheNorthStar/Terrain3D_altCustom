@@ -30,7 +30,7 @@ public:
 
 private:
 	// Terrain state
-	String _version = "0.9.2-dev";
+	String _version = "0.9.2-mk_alt";
 	bool _is_inside_world = false;
 	bool _initialized = false;
 
@@ -103,6 +103,7 @@ private:
 
 public:
 	static int debug_level;
+	static TypedArray<String> _temp_util_set_prop_tooltips( Array _nodes );
 
 	Terrain3D();
 	~Terrain3D();

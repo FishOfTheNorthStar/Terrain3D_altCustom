@@ -15,7 +15,8 @@ cd $REPO/doc
 echo Running make_rst.py to produce sphinx output
 $MAKERST --verbose --filter Terrain3D --output api classes/
 
-find classes -type f ! -name 'Terrain3D*' -delete
+# find classes -type f ! -name 'Terrain3D*' -delete
+find classes -type f ! -name 'Terrain3D*' | xargs rm -fr
 
 make clean
 make html

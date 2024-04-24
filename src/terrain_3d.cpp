@@ -172,6 +172,14 @@ void Terrain3D::_destroy_mouse_picking() {
 	memdelete_safely(_mouse_vp);
 }
 
+TypedArray<String> Terrain3D::_temp_util_set_prop_tooltips(Array _nodes) {
+	TypedArray<String> _retval = TypedArray<String>();
+	for (int _i = 0; _i < _nodes.size(); _i++) {
+		Node *_child = Object::cast_to<Node>(_nodes[_i]);
+		_retval.push_back(_child->get_name());
+	}
+	return _retval;
+}
 /**
  * If running in the editor, recurses into the editor scene tree to find the editor cameras and grabs the first one.
  * The edited_scene_root is excluded in case the user already has a Camera3D in their scene.
@@ -199,8 +207,20 @@ void Terrain3D::_grab_camera() {
 /**
  * Recursive helper function for _grab_camera().
  * DEPRECATED - Remove when moving to 4.2 and use EditorInterface.get_editor_viewport_3d(i).get_camera_3d()
+ * 
+ * mk notes: I switched to the new method described to see if it helped resolve some occasional issues I would 
+ * get during start up and it seemed like it might.  Hard to say, stability is hit or miss with Godot and it's 
+ * not always clear why.  Leaving it at the new way for my local tests, works fine.
  */
 void Terrain3D::_find_cameras(TypedArray<Node> from_nodes, Node *excluded_node, TypedArray<Camera3D> &cam_array) {
+	if (   EI->get_editor_viewport_3d(0)->get_camera_3d()->is_inside_tree() 
+		&& EI->get_editor_viewport_3d(0)->get_camera_3d()->is_current()) {
+		cam_array.push_back(EI->get_editor_viewport_3d(0)->get_camera_3d());
+		return;
+	}
+	LOG(ERROR, "Could not get the editor scene camera");
+
+	/*
 	for (int i = 0; i < from_nodes.size(); i++) {
 		Node *node = Object::cast_to<Node>(from_nodes[i]);
 		if (node != excluded_node) {
@@ -210,7 +230,7 @@ void Terrain3D::_find_cameras(TypedArray<Node> from_nodes, Node *excluded_node, 
 			LOG(DEBUG, "Found a Camera3D at: ", node->get_path());
 			cam_array.push_back(node);
 		}
-	}
+	} */
 }
 
 void Terrain3D::_clear(bool p_clear_meshes, bool p_clear_collision) {
