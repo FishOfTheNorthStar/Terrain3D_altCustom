@@ -64,6 +64,11 @@ void Terrain3DTexture::set_albedo_color(Color p_color) {
 	emit_signal("setting_changed");
 }
 
+void Terrain3DTexture::set_solid_color(Color p_color) {
+	_data._solid_color = p_color;
+	emit_signal("setting_changed");
+}
+
 void Terrain3DTexture::set_albedo_texture(const Ref<Texture2D> &p_texture) {
 	if (_is_texture_valid(p_texture)) {
 		_data._albedo_texture = p_texture;
@@ -76,6 +81,16 @@ void Terrain3DTexture::set_normal_texture(const Ref<Texture2D> &p_texture) {
 		_data._normal_texture = p_texture;
 		emit_signal("file_changed");
 	}
+}
+
+void Terrain3DTexture::set_spec_adjust(real_t p_spec_adjust) {
+	_data._spec_adjust = p_spec_adjust;
+		emit_signal("setting_changed");
+}
+
+void Terrain3DTexture::set_userdata(Vector4 p_userdata) {
+	_data._userdata = p_userdata;
+	emit_signal("setting_changed");
 }
 
 void Terrain3DTexture::set_uv_scale(real_t p_scale) {
@@ -110,8 +125,15 @@ void Terrain3DTexture::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_normal_texture"), &Terrain3DTexture::get_normal_texture);
 	ClassDB::bind_method(D_METHOD("set_uv_scale", "scale"), &Terrain3DTexture::set_uv_scale);
 	ClassDB::bind_method(D_METHOD("get_uv_scale"), &Terrain3DTexture::get_uv_scale);
-	ClassDB::bind_method(D_METHOD("set_uv_rotation", "scale"), &Terrain3DTexture::set_uv_rotation);
+	ClassDB::bind_method(D_METHOD("set_uv_rotation", "angle"), &Terrain3DTexture::set_uv_rotation);
 	ClassDB::bind_method(D_METHOD("get_uv_rotation"), &Terrain3DTexture::get_uv_rotation);
+
+	ClassDB::bind_method(D_METHOD("set_spec_adjust", "adjust"), &Terrain3DTexture::set_spec_adjust);
+	ClassDB::bind_method(D_METHOD("get_spec_adjust"), &Terrain3DTexture::get_spec_adjust);
+	ClassDB::bind_method(D_METHOD("set_solid_color", "color"), &Terrain3DTexture::set_solid_color);
+	ClassDB::bind_method(D_METHOD("get_solid_color"), &Terrain3DTexture::get_solid_color);
+	ClassDB::bind_method(D_METHOD("set_userdata", "vec4"), &Terrain3DTexture::set_userdata);
+	ClassDB::bind_method(D_METHOD("get_userdata"), &Terrain3DTexture::get_userdata);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name", PROPERTY_HINT_NONE), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "texture_id", PROPERTY_HINT_NONE), "set_texture_id", "get_texture_id");
@@ -120,4 +142,7 @@ void Terrain3DTexture::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "normal_texture", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture,CompressedTexture2D"), "set_normal_texture", "get_normal_texture");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "uv_scale", PROPERTY_HINT_RANGE, "0.001, 2.0"), "set_uv_scale", "get_uv_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "uv_rotation", PROPERTY_HINT_RANGE, "0.0, 1.0"), "set_uv_rotation", "get_uv_rotation");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "specadjust", PROPERTY_HINT_RANGE, "0.0, 1.0"), "set_spec_adjust", "get_spec_adjust");
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "solid_color", PROPERTY_HINT_NONE), "set_solid_color", "get_solid_color");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR4, "userdata", PROPERTY_HINT_NONE), "set_userdata", "get_userdata");
 }

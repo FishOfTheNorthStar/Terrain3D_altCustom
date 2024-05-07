@@ -23,47 +23,31 @@ render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlic
  *
  */
 
- 
-#include "res://addons/terrain_3d/tools/fastnoiselite.gdshaderinc"
+// _________________________________
+// ** DEFINE requested features ( these could be defined much 
+// earlier in the script but for clarity it sits here for now )
+//
+#define __T3D_STANDARD_TEXTURING__
 
-// Private uniforms
+#if defined(STRATA_GRADIENT_ENABLED)
+	#define FRAG_SAMPLE_TINT_NOISE
+	#define FRAG_SAMPLE_GRADIENTS
+	#define FRAG_SAMPLE_VEGETATION
+#endif
 
-uniform float _region_size = 1024.0;
-uniform float _region_texel_size = 0.0009765625; // = 1/1024
-uniform float _mesh_vertex_spacing = 1.0;
-uniform float _mesh_vertex_density = 1.0; // = 1/_mesh_vertex_spacing
-uniform int _region_map_size = 16;
-uniform int _region_map[256];
-uniform vec2 _region_offsets[256];
-uniform sampler2DArray _height_maps : repeat_disable;
-uniform usampler2DArray _control_maps : repeat_disable;
-uniform float _texture_uv_scale_array[32];
-uniform float _texture_uv_rotation_array[32];
-uniform vec4 _texture_color_array[32];
-uniform uint _background_mode = 1u;  // NONE = 0, FLAT = 1, NOISE = 2
-uniform uint _mouse_layer = 0x80000000u; // Layer 32
+#include "res://addons/terrain_3d/shader/ext/fastnoiselite.gdshaderinc"
 
 // Public uniforms
 uniform bool height_blending = true;
 uniform float blend_sharpness : hint_range(0, 1) = 0.87;
 
-// [_Auto_Shader_Uniforms_Begin_]
-uniform float _auto_shader_slope;
-uniform float _auto_shader_height_reduction;
-uniform int _auto_shader_base_texture;
-uniform int _auto_shader_overlay_texture;
-// [_Auto_Shader_Uniforms_End_]
+// Structs & Type Definitions
+#include "res://addons/terrain_3d/shader/core/t3d_material_def.gdshaderinc"
 
-// [_Multi_Scale_Uniforms_Begin_]
-uniform int _multi_scale_texture;
-uniform float _multi_scale_micro_size;
-uniform float _multi_scale_macro_size;
-uniform float _multi_scale_far;
-uniform float _multi_scale_near;
-// [_Multi_Scale_Uniforms_End_]
+// [ NOTE: If a custom shader wants to override a mod's standard parameter provider function with a user's custom version, that must happen before this line. ]
+#include "res://addons/terrain_3d/shader/core/t3d_managed_uniforms.gdshaderinc"
 
 // [_World_Noise_Uniforms_Begin_]
-uniform sampler2D _region_blend_map : hint_default_black, filter_linear, repeat_disable;
 uniform int _world_noise_max_octaves;
 uniform int _world_noise_min_octaves;
 uniform float _world_noise_lod_distance;
@@ -74,11 +58,6 @@ uniform float _world_noise_blend_near;
 uniform float _world_noise_blend_far;
 // [_World_Noise_Uniforms_End_]
 
-// [_UV_Distortion_Uniforms_Begin_]
-uniform float _uv_distortion_size;
-uniform float _uv_distortion_power;
-// [_UV_Distortion_Uniforms_End_]
-
 // [_Noise_Tint_Uniforms_Begin_]
 uniform vec3 _noise_tint_macro_variation1;
 uniform vec3 _noise_tint_macro_variation2;
@@ -88,65 +67,65 @@ uniform float _noise_tint_noise1_angle;
 uniform vec2 _noise_tint_noise1_offset = vec2(0.5);
 uniform float _noise_tint_noise2_scale;
 uniform float _noise_tint_noise3_scale;
+
+float P_TINT_NZ_SCALE_3() { return _noise_tint_noise3_scale; }
+vec3 P_TINT_NZ_SCL() { return vec3(
+	_noise_tint_noise1_scale,
+	_noise_tint_noise2_scale,
+	_noise_tint_noise3_scale ); }
+vec3 P_TINT_NZ_OFFS() { return vec3(
+	_noise_tint_noise1_offset,
+	_noise_tint_noise1_angle ); }
 // [_Noise_Tint_Uniforms_End_]
 
-// Varyings & Types
 
-struct Material {
-	vec4 alb_ht;
-	vec4 nrm_rg;
-	int base;
-	int over;
-	float blend;
-};
+// Varyings
+#include "res://addons/terrain_3d/shader/core/t3d_managed_varyings.gdshaderinc"
 
-varying flat vec3 v_vertex;	// World coordinate vertex location
-varying flat vec3 v_camera_pos;
-varying flat float v_vertex_dist;
-varying flat ivec3 v_region;
-varying flat vec3 v_norm_region;
-varying flat vec2 v_uv_offset;
-varying flat vec2 v_uv2_offset;
-varying flat uvec4 v_control;
-varying flat ivec4 v_neighbors;
-varying flat vec4 v_rangles;
-varying float v_far_factor;
+// _________________________________
+// ** IMPORT CORE FUNCTIONS
+// These define the core internal functions the shader's vertex and fragment functions call.
+#define __T3D_INTERNAL_GLOBALS_AVAILABLE__
+#include "res://addons/terrain_3d/shader/core/t3d_standard_functions.gdshaderinc"
+#include "res://addons/terrain_3d/shader/core/t3d_deliver_texture_id_funcs.gdshaderinc"
 
-varying vec3 v_noise;
-varying vec3 v_normal;
-varying vec3 v_tangent;
-varying vec3 v_binormal;
-varying vec2 v_uvdistort;
 
-// A couple utility functions, should be moved into their respective namespaces
-
-// Moves a point around a pivot point.
-vec2 rotate_around(vec2 p,vec2 pv,float a){
-	vec2 cs,dy; p-=pv;cs=vec2(cos(a),sin(a));pv+=cs.xy*p.x;dy=cs.yx*p.y;dy.x*=-1.;pv+=dy; return pv; }
-	
-float random(in ivec2 xy) {
-	return fract(sin(dot(vec2(xy), vec2(12.9898, 78.233))) * 43758.5453); }
-
-	
-// Takes in UV world space coordinates, returns ivec3 with:
-// XY: (0 to _region_size) coordinates within a region
-// Z: layer index used for texturearrays, -1 if not in a region
-ivec3 get_region_uv(vec2 uv) {
-	uv *= _region_texel_size;
-	ivec2 pos = ivec2(floor(uv)) + (_region_map_size / 2);
-	int bounds = int(pos.x>=0 && pos.x<_region_map_size && pos.y>=0 && pos.y<_region_map_size);
-	int layer_index = _region_map[ pos.y * _region_map_size + pos.x ] * bounds - 1;
-	return ivec3(ivec2((uv - _region_offsets[layer_index]) * _region_size), layer_index); }
-
-// Takes in UV2 region space coordinates, returns vec3 with:
-// XY: (0 to 1) coordinates within a region
-// Z: layer index used for texturearrays, -1 if not in a region
-vec3 get_region_uv2(vec2 uv) {
-	ivec2 pos = ivec2(floor( uv ) ) + (_region_map_size / 2);
-	int bounds = int(pos.x>=0 && pos.x<_region_map_size && pos.y>=0 && pos.y<_region_map_size);
-	int layer_index = _region_map[ pos.y * _region_map_size + pos.x ] * bounds - 1;
-	return vec3(uv - _region_offsets[layer_index], float(layer_index)); }
-
+// [ NOTE: All requested mods parameter provider functions (or their overrides) must be declared before this line.]
+// _________________________________
+// ** IMPORT ADDITONAL FUNCTIONS
+// First set this define, so the included files can detect that
+// references out of scope to certain named globals is (or may be) 
+// valid.  This is only to help Godot's shader editor out, so it's
+// not full of error messages about undeclared variables.  This is 
+// the only place this should be defined at and its not optional.
+// _________________________________
+// ** INCLUDE the prototype non-standard utility functions ( todo: 
+// perhaps only include these if defines are detected that require it.  
+// For now it's so light weight, it hardly matters. )
+//
+#include "res://addons/terrain_3d/shader/proto/t3d_utility.gdshaderinc"
+// _________________________________
+// ** FEATURE function definition includes, as needed.  These includes
+// only define functions, not produce output directly.  Then later, in
+// the fragment function, each has a corresponding "..._inline.gdshaderinc"
+// file and that gets included in the fragment at the end, and it calls
+// the function(s) defined in these files.
+//
+#if defined(CARTOGRAPHY_OVERLAYS)
+#include "res://addons/terrain_3d/shader/mods/t3d_carto.gdshaderinc"
+#endif
+#if defined(STRATA_GRADIENT_ENABLED) || defined(VEGETATION_ENABLED)
+#include "res://addons/terrain_3d/shader/mods/t3d_gradients.gdshaderinc"
+#endif
+#if defined(RAIN_ENABLED)
+#include "res://addons/terrain_3d/shader/mods/t3d_rain_spec_mod.gdshaderinc"
+#endif
+#if defined(ADJUST_AORMS_ENABLED)
+#include "res://addons/terrain_3d/shader/mods/t3d_adjust_aorms_mod.gdshaderinc"
+#endif
+#if defined(UV_DISTORTION_ENABLED)
+#include "res://addons/terrain_3d/shader/mods/t3d_uv_distort_funcs.gdshaderinc"
+#endif
 //INSERT: HEADER_END_MARK_NOTICE
 // -------------------------------------------------------------------------
 // * Note, any code above this line will be removed the next time any change

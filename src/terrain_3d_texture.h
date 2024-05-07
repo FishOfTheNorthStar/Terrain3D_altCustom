@@ -22,6 +22,9 @@ public:
 		Ref<Texture2D> _normal_texture;
 		real_t _uv_scale = 0.1f;
 		real_t _uv_rotation = 0.0f;
+		real_t _spec_adjust = 0.5f;
+		Color _solid_color = Color(1.f, 1.f, 1.f, 0.5f);
+		Vector4 _userdata = Vector4(0.f, 0.f, 0.f, 0.f);
 	};
 
 private:
@@ -57,6 +60,15 @@ public:
 
 	void set_uv_rotation(real_t p_rotation);
 	real_t get_uv_rotation() const { return _data._uv_rotation; }
+	
+	void set_spec_adjust(real_t p_spec_adjust);
+	real_t get_spec_adjust() const { return _data._spec_adjust; }
+
+	void set_solid_color(Color p_color);
+	Color get_solid_color() const { return _data._solid_color; }
+
+	void set_userdata(Vector4 p_color);
+	Vector4 get_userdata() const { return _data._userdata; }
 
 protected:
 	static void _bind_methods();

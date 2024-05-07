@@ -1,6 +1,7 @@
 // Copyright © 2023 Cory Petkovsek, Roope Palmroos, and Contributors.
 
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/portable_compressed_texture2d.hpp>
 #include <godot_cpp/classes/resource_saver.hpp>
 
 #include "logger.h"
@@ -60,6 +61,8 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 		Image::Format normal_format = Image::FORMAT_MAX;
 		bool albedo_mipmaps = true;
 		bool normal_mipmaps = true;
+		bool albedo_compressed = true;
+		bool normal_compressed = true;
 
 		// Detect image sizes and formats
 		for (int i = 0; i < _textures.size(); i++) {
@@ -84,10 +87,12 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 				if (albedo_format == Image::FORMAT_MAX) {
 					albedo_format = format;
 					albedo_mipmaps = img->has_mipmaps();
-				} else if (format != albedo_format) {
-					LOG(ERROR, "Texture ID ", i, " albedo format: ", format, " doesn't match first texture: ", albedo_format);
-					return;
-				}
+					albedo_compressed = img->is_compressed();
+				} 
+				//else if (format != albedo_format) {
+				//	LOG(ERROR, "Texture ID ", i, " albedo format: ", format, " doesn't match first texture: ", albedo_format);
+				//	return;
+				//}
 			}
 			if (normal_tex.is_valid()) {
 				Vector2i tex_size = normal_tex->get_size();
@@ -102,12 +107,15 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 				if (normal_format == Image::FORMAT_MAX) {
 					normal_format = format;
 					normal_mipmaps = img->has_mipmaps();
-				} else if (format != normal_format) {
-					LOG(ERROR, "Texture ID ", i, " normal format: ", format, " doesn't match first texture: ", normal_format);
-					return;
+					normal_compressed = img->is_compressed();
 				}
+				// else if (format != normal_format) {
+				//	LOG(ERROR, "Texture ID ", i, " normal format: ", format, " doesn't match first texture: ", normal_format);
+				//	return;
+				//}
 			}
 		}
+
 
 		if (normal_size == Vector2i(0, 0)) {
 			normal_size = albedo_size;
@@ -138,6 +146,39 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 					texture_set->get_data()->_albedo_texture = ImageTexture::create_from_image(img);
 				} else {
 					img = tex->get_image();
+					if (albedo_format != Image::FORMAT_MAX) {
+						if (img->get_format() != albedo_format) {
+							if (img->is_compressed()) {
+								img->decompress();
+							}
+							if (albedo_mipmaps && !img->has_mipmaps()) {
+								img->generate_mipmaps(true); }
+							if (albedo_compressed)
+							{
+								LOG(WARN, "ID ", i, " albedo texture was not compressed, compressing now to format (",albedo_format,")");
+								//img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC);
+								
+								Ref<PortableCompressedTexture2D> _newComp = Ref<PortableCompressedTexture2D> ( new PortableCompressedTexture2D() );
+								_newComp->init_ref();
+								_newComp->set_keep_compressed_buffer(true);
+								//_newComp->create_from_image(img, PortableCompressedTexture2D::COMPRESSION_MODE_S3TC);
+								_newComp->create_from_image(img, PortableCompressedTexture2D::COMPRESSION_MODE_S3TC, false, 0.95);
+
+								//img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_SRGB,);
+								//img->copy_from(_newComp->get_image());
+								//img = _newComp->get_image();
+								//texture_set->get_data()->_albedo_texture = ImageTexture::create_from_image(img);
+								texture_set->get_data()->_albedo_texture = ImageTexture::create_from_image(_newComp->get_image());
+								img =  texture_set->get_albedo_texture()->get_image();// _newComp2->get_image();
+							} else if (!albedo_compressed && img->is_compressed() ) {
+								img->decompress();
+							}
+							if (!albedo_compressed) {
+								LOG(WARN, "ID ", i, " albedo texture was wrong format (",img->get_format(),"), converting to: ", albedo_format);
+								img->convert(albedo_format);
+							}
+						}
+					}
 					LOG(DEBUG, "ID ", i, " albedo texture is valid. Format: ", img->get_format());
 				}
 				albedo_texture_array.push_back(img);
@@ -167,6 +208,40 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 					texture_set->get_data()->_normal_texture = ImageTexture::create_from_image(img);
 				} else {
 					img = tex->get_image();
+
+					if (normal_format != Image::FORMAT_MAX) {
+						if (img->get_format() != normal_format) {
+							if (img->is_compressed()) {
+								img->decompress();
+							}
+							if (normal_mipmaps && !img->has_mipmaps()) {
+								img->generate_mipmaps(true); }
+
+							if (normal_compressed && !img->is_compressed() )
+							{
+								LOG(WARN, "ID ", i, " normal texture was not compressed, compressing now to format (",normal_format,")");
+								
+								//Ref<PortableCompressedTexture2D> _newComp2 = Ref<PortableCompressedTexture2D> ( new PortableCompressedTexture2D() );
+								Ref<PortableCompressedTexture2D> _newComp2 = Ref<PortableCompressedTexture2D> ( new PortableCompressedTexture2D() );
+								_newComp2->init_ref();
+								_newComp2->set_keep_compressed_buffer(true);
+								//Ref<PortableCompressedTexture2D> _newComp = new PortableCompressedTexture2D();
+								_newComp2->create_from_image(img, PortableCompressedTexture2D::COMPRESSION_MODE_S3TC, false, 0.95);
+								//img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_SRGB,);
+								//img->copy_from(_newComp2->get_image());
+								texture_set->get_data()->_normal_texture = ImageTexture::create_from_image(_newComp2->get_image());
+								img =  texture_set->get_normal_texture()->get_image();// _newComp2->get_image();
+								//img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_NORMAL);
+							} else if (!normal_compressed && img->is_compressed() ) {
+								img->decompress();
+							}
+							if (!normal_compressed) {
+								LOG(WARN, "ID ", i, " normal texture was wrong format (",img->get_format(),"), converting to: ", normal_format);
+								img->convert(normal_format);
+							}
+						}
+					}
+
 					LOG(DEBUG, "ID ", i, " Normal texture is valid. Format: ", img->get_format());
 				}
 				normal_texture_array.push_back(img);
@@ -186,6 +261,9 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 		PackedColorArray colors;
 		PackedFloat32Array uv_scales;
 		PackedFloat32Array uv_rotations;
+		PackedFloat32Array spec_adjusts;
+		PackedColorArray solidcolors;
+		PackedColorArray userdata;
 
 		for (int i = 0; i < _textures.size(); i++) {
 			Ref<Terrain3DTexture> texture_set = _textures[i];
@@ -195,10 +273,17 @@ void Terrain3DTextureList::_update_texture_data(bool p_textures, bool p_settings
 			colors.push_back(texture_set->get_albedo_color());
 			uv_scales.push_back(texture_set->get_uv_scale());
 			uv_rotations.push_back(texture_set->get_uv_rotation());
+			spec_adjusts.push_back(texture_set->get_spec_adjust());
+			solidcolors.push_back(texture_set->get_solid_color());
+			Vector4 _tvec = texture_set->get_userdata();
+			userdata.push_back(Color(_tvec.x, _tvec.y, _tvec.z, _tvec.w));
 		}
 		signal_args.push_back(colors);
 		signal_args.push_back(uv_scales);
 		signal_args.push_back(uv_rotations);
+		signal_args.push_back(spec_adjusts);
+		signal_args.push_back(solidcolors);
+		signal_args.push_back(userdata);
 	}
 
 	emit_signal("textures_changed", signal_args);

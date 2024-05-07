@@ -22,6 +22,24 @@
     <Filter Include="2. Docs\XML">
       <UniqueIdentifier>{0d771ba6-8e4a-4985-895c-d9b8eec8b3fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3. Shaders\Portions">
+      <UniqueIdentifier>{c65857c3-ff3d-41e0-a301-0cc84d8d5968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Shaders\Portions\Core">
+      <UniqueIdentifier>{b3dcfc74-028b-4b7e-9610-59e64077b5fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Shaders\Portions\Modules">
+      <UniqueIdentifier>{5b1ab704-286f-4cf2-a209-dba86df858b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Shaders\Portions\Core\Vertex">
+      <UniqueIdentifier>{b6ce9a26-238c-4928-a346-a3e74bcd47b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Shaders\Portions\Core\Fragment">
+      <UniqueIdentifier>{8dd90f03-b903-4ccf-aaa8-8fed41289655}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="4. Headers\Property Sets">
+      <UniqueIdentifier>{4bb2c9e9-0659-401a-9f8d-89b53f19f3e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\terrain_3d_texture_list.h">
@@ -63,8 +81,44 @@
     <ClInclude Include="src\__MACROS.h">
       <Filter>4. Headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\__INLINE_HELP_DEFS.h">
-      <Filter>4. Headers</Filter>
+    <ClInclude Include="src\propsets\__PROPSETS.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_AUTO_SHADER.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_FEATURE_SHADER.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_MULTI_SCALING.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_NOISE_TINT.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_UV_DISTORTION.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_WORLD_NOISE.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\ALL_SETS.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_RAIN.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_ADJUST_AORMS.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_DEBUG_VIEWS.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_VEGETATION.h">
+      <Filter>4. Headers\Property Sets</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propsets\_STRATA_GRADIENT.h">
+      <Filter>4. Headers\Property Sets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="src\terrain_3d_util.cpp">
       <Filter>5. C++</Filter>
+    </ClCompile>
+    <ClCompile Include="project\addons\terrain_3d\shader\mods\t3d_gradients.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,9 +190,6 @@
     <None Include="src\shaders\main.glsl">
       <Filter>3. Shaders</Filter>
     </None>
-    <None Include="src\shaders\world_noise.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
     <None Include=".gitignore">
       <Filter>1. Project Files</Filter>
     </None>
@@ -154,16 +208,7 @@
     <None Include="doc\index.rst">
       <Filter>2. Docs</Filter>
     </None>
-    <None Include="src\shaders\auto_shader.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
-    <None Include="src\shaders\dual_scaling.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
     <None Include="src\shaders\editor_functions.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
-    <None Include="src\shaders\uniforms.glsl">
       <Filter>3. Shaders</Filter>
     </None>
     <None Include="doc\docs\texture_painting.md">
@@ -193,18 +238,103 @@
     <None Include="doc\docs\storage_format.md">
       <Filter>2. Docs</Filter>
     </None>
-    <None Include="src\shaders\uv_distortion.glsl">
-      <Filter>3. Shaders</Filter>
-    </None>
     <None Include="src\shaders\__DEFINES.glsl">
       <Filter>3. Shaders</Filter>
     </None>
     <None Include="src\shaders\__HEADER.glsl">
       <Filter>3. Shaders</Filter>
     </None>
-    <None Include="project\addons\terrain_3d\tools\debug_view.gdshaderinc">
+    <None Include="project\addons\terrain_3d\shader\mods\debug_view.gdshaderinc">
       <Filter>3. Shaders</Filter>
     </None>
+    <None Include="project\addons\terrain_3d\shader\ext\psrddnoise3.gdshaderinc">
+      <Filter>3. Shaders</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\proto\t3d_utility.gdshaderinc">
+      <Filter>3. Shaders\Portions</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_adjust_aorms_mod.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_adjust_aorms_mod_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_carto.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_carto_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_carto_presets.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_deliver_mixed_mat_funcs.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_deliver_mixed_mat_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_deliver_scaled_base_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_deliver_scaled_base_overlay.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_inline_effect_commit.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_inline_effect_first.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_material_def.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_rain_spec_mod.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_rain_spec_mod_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_standard_functions.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_strata_gradient_inline.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_uv_distort_funcs.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\mods\t3d_world_noise_funcs.gdshaderinc">
+      <Filter>3. Shaders\Portions\Modules</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_deliver_texture_id_funcs.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_managed_uniforms.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\vertex\t3d_vertex_init_varyings.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Vertex</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\core\t3d_managed_varyings.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\vertex\t3d_vertex_early_discard_test.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Vertex</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\vertex\t3d_vertex_apply_standard_varyings.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Vertex</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\fragment\t3d_fragment_apply_mods.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Fragment</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\fragment\t3d_fragment_init.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Fragment</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\vertex\t3d_vertex_calc_normal.gdshaderinc">
+      <Filter>3. Shaders\Portions\Core\Vertex</Filter>
+    </None>
+    <None Include="project\addons\terrain_3d\shader\vertex\t3d_vertex_vegetation.gdshaderinc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include=".readthedocs.yaml">

@@ -1,10 +1,14 @@
-// Copyright © 2023 Cory Petkovsek, Roope Palmroos, and Contributors.
+#if defined(WORLD_NOISE_ENABLED)
+// ***********************************************************************************************
+#if defined(WORLD_NOISE_MODE_1)
 
-R"(
+// WORLD_NOISE_FUNCS_MODE_1
 
-//INSERT: WORLD_NOISE_FUNCS_MODE_1
-
-// World Noise Mode 1 (T3D) start
+int get_noise_octaves_by_distance(float _camdist) {
+    return int( 
+			pow(1. - clamp( _camdist / (_world_noise_lod_distance), 0., 1.) , debug_world_noise_octaves_falloff_exp )
+			* float(_world_noise_max_octaves - _world_noise_min_octaves) )
+		+ _world_noise_min_octaves; }
 
 float hashf(float f) {
 	return fract(sin(f) * 1e4); }
@@ -36,16 +40,12 @@ vec3 noise2D(vec2 x) {
                 du * ( vec2(k1, k2) + k3 * u.yx) );
 }
 
-float world_noise(vec2 p) {
+float world_noise(int _octaves, vec2 p) {
     float a = 0.0;
     float b = 1.0;
     vec2  d = vec2(0.0);
-
-    int octaves = int( clamp(
-	float(_world_noise_max_octaves) - floor(v_vertex_dist/(_world_noise_lod_distance)),
-    float(_world_noise_min_octaves), float(_world_noise_max_octaves)) );
 	
-    for( int i=0; i < octaves; i++ ) {
+    for( int i=0; i < _octaves; i++ ) {
         vec3 n = noise2D(p);
         d += n.yz;
         a += b * n.x / (1.0 + dot(d,d));
@@ -55,7 +55,8 @@ float world_noise(vec2 p) {
     return a;
 }
 
-float noise_mod(float _orig_height, vec2 _at_uv) {
+
+float noise_mod(int _octaves, float _orig_height, vec2 _at_uv) {
 	float _weight = texture(_region_blend_map, (_at_uv/float(_region_map_size))+0.5).r;
 	float _rmap_half_size = float(_region_map_size)*.5;
     vec2 _abs_at_uv = abs(_at_uv);
@@ -69,32 +70,44 @@ float noise_mod(float _orig_height, vec2 _at_uv) {
     _weight = mix(_weight, 0., _minus_half_map_up.y);
 
     float _scale = 8.0 / max(0.50, _world_noise_scale);
-	float _new_height = mix(_orig_height, world_noise((_at_uv+_world_noise_offset.xz) * _scale ) * // _world_noise_scale*.1) *
+	float _new_height = mix(_orig_height, world_noise(_octaves, (_at_uv+_world_noise_offset.xz) * _scale ) * 
         _world_noise_height*5. + _world_noise_offset.y*100.,
 		clamp(smoothstep(_world_noise_blend_near, _world_noise_blend_far, 1.0 - _weight), 0.0, 1.0));
     return _new_height; }
 
 // World Noise 1 end
+#endif
+// ***********************************************************************************************
+#if defined(WORLD_NOISE_MODE_2)
+// WORLD_NOISE_FUNCS_MODE_2
+#include "res://addons/terrain_3d/shader/ext/fastnoiselite.gdshaderinc"
 
-//INSERT: WORLD_NOISE_FUNCS_MODE_2
-
-// World Noise Mode 2 (FNL v1) start
-
-#include "res://addons/terrain_3d/tools/fastnoiselite.gdshaderinc"
+int get_noise_octaves_by_distance(float _camdist) {
+    return int( 
+			pow(1. - clamp( _camdist / (_world_noise_lod_distance), 0., 1.) , debug_world_noise_octaves_falloff_exp )
+			* float(_world_noise_max_octaves - _world_noise_min_octaves) )
+		+ _world_noise_min_octaves; }
 
 const int   _T3D_FNL_SEED = 420;
 const float _T3D_FNL_SCALE_MAX = 1.0;
-
-fnl_state __INIT_FNL() {
+fnl_state __INIT_FNL(int _octaves) {
+//fnl_state __INIT_FNL() { int _octaves = 4;
     fnl_state noise = fnlCreateState(_T3D_FNL_SEED);
 	//noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
 	//noise.noise_type = FNL_NOISE_OPENSIMPLEX2S;
-	noise.noise_type = FNL_NOISE_CELLULAR;
-	//noise.noise_type = FNL_NOISE_PERLIN;
+	//noise.noise_type = FNL_NOISE_CELLULAR;
+	noise.noise_type = FNL_NOISE_PERLIN;
 	//noise.noise_type = FNL_NOISE_VALUE_CUBIC;
 	//noise.noise_type = FNL_NOISE_VALUE;
-    noise.fractal_type = FNL_FRACTAL_FBM;
-	noise.octaves=6;
+	
+	//noise.fractal_type =FNL_FRACTAL_NONE;
+	//noise.fractal_type =FNL_FRACTAL_FBM;
+	//noise.fractal_type =FNL_FRACTAL_RIDGED;
+	noise.fractal_type =FNL_FRACTAL_PINGPONG;
+	//noise.fractal_type =FNL_FRACTAL_DOMAIN_WARP_PROGRESSIVE;
+	//noise.fractal_type =FNL_FRACTAL_DOMAIN_WARP_INDEPENDENT;
+    
+	noise.octaves=_octaves;
     return noise;
 }
 
@@ -139,78 +152,21 @@ vec4 __SAMPLE_FNL2x2(fnl_state noise, vec2 _uv, vec2 _uvStep, float _scale) {
         fnlGetNoise2D(noise, _uv00.x, _uv00.y) ) * 0.5 + 0.5;
 }
 
+
 float hashf(float f) {
 	return fract(sin(f) * 1e4); }
 
 float hashv2(vec2 v) {
 	return fract(1e4 * sin(17.0 * v.x + v.y * 0.1) * (0.1 + abs(sin(v.y * 13.0 + v.x)))); }
 
-// https://iquilezles.org/articles/morenoise/
-vec3 noise2D(vec2 x) {
-    vec2 f = fract(x);
-    // Quintic Hermine Curve.  Similar to SmoothStep()
-    vec2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
-    vec2 du = 30.0*f*f*(f*(f-2.0)+1.0);
-
-    vec2 p = floor(x);
-
-	// Four corners in 2D of a tile
-	float a = hashv2( p+vec2(0,0) );
-    float b = hashv2( p+vec2(1,0) );
-    float c = hashv2( p+vec2(0,1) );
-    float d = hashv2( p+vec2(1,1) );
-
-    // Mix 4 corner percentages
-    float k0 =   a;
-    float k1 =   b - a;
-    float k2 =   c - a;
-    float k3 =   a - b - c + d;
-    return vec3( k0 + k1 * u.x + k2 * u.y + k3 * u.x * u.y,
-                du * ( vec2(k1, k2) + k3 * u.yx) );
-}
-
-float world_noise(vec2 p) {
-    float a = 0.0;
-    float b = 1.0;
-    vec2  d = vec2(0.0);
-
-    int octaves = int( clamp(
-	float(_world_noise_max_octaves) - floor(v_vertex_dist/(_world_noise_lod_distance)),
-    float(_world_noise_min_octaves), float(_world_noise_max_octaves)) );
-	
-    for( int i=0; i < octaves; i++ ) {
-        vec3 n = noise2D(p);
-        d += n.yz;
-        a += b * n.x / (1.0 + dot(d,d));
-        b *= 0.5;
-        p = mat2( vec2(0.8, -0.6), vec2(0.6, 0.8) ) * p * 2.0;
-    }
-    return a;
-}
-
-float noise_mod(float _orig_height, vec2 _at_uv) {
-	float _weight = texture(_region_blend_map, (_at_uv/float(_region_map_size))+0.5).r;
-	float _rmap_half_size = float(_region_map_size)*.5;
-    vec2 _abs_at_uv = abs(_at_uv);
-    vec2 _minus_half_map_up = max(vec2(0.),_abs_at_uv - (_rmap_half_size+.5));
-    vec2 _minus_half_map_down = max(vec2(0.),_abs_at_uv - (_rmap_half_size-.5));
-    //_weight *= min(1., _minus_half_map_down.x * _minus_half_map_down.y * _minus_half_map_up.x * _minus_half_map_up.y);
-
-	_weight = mix(_weight, 0., _minus_half_map_down.x);
-	_weight = mix(_weight, 0., _minus_half_map_down.y);
-    _weight = mix(_weight, 0., _minus_half_map_up.x);
-    _weight = mix(_weight, 0., _minus_half_map_up.y);
-
-	float _new_height = mix(_orig_height, world_noise((_at_uv+_world_noise_offset.xz) * _world_noise_scale*.1) *
-        _world_noise_height*10. + _world_noise_offset.y*100.,
-		clamp(smoothstep(_world_noise_blend_near, _world_noise_blend_far, 1.0 - _weight), 0.0, 1.0));
-    return _new_height; }
-
 // World Noise Mode 2 (FNL v1) end
-
-
-//INSERT: WORLD_NOISE_DISABLED
+#endif
+// ***********************************************************************************************
+#endif
+// ***********************************************************************************************
+#if !defined(WORLD_NOISE_ENABLED) || ( !defined(WORLD_NOISE_MODE_1) && !defined(WORLD_NOISE_MODE_2) )
+// WORLD_NOISE_DISABLED
 float noise_mod(float _orig_height, vec2 _at_uv) {
     return _orig_height; }
-
-)"
+#endif
+// ***********************************************************************************************

@@ -1,4 +1,3 @@
-
 #if defined(DEBUG_CHECKERED)
 	// Show a checkered grid
 	vec2 __p = uv * 1.0; // scale
@@ -10,37 +9,37 @@
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_GREY)
+#endif
+#if defined(DEBUG_GREY)
 	// Show all grey
 	ALBEDO = vec3(0.2);
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_HEIGHTMAP)
+#endif
+#if defined(DEBUG_HEIGHTMAP)
 	// Show heightmap
 	ALBEDO = vec3(smoothstep(-0.1, 2.0, 0.5 + get_height_grad(uv2 , WORLD_GRAD)/300.0));
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
-	NORMAL = vec3(0.5, 0.5, 1.0);
+	// NORMAL = vec3(0.5, 0.5, 1.0);
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_COLORMAP)
+#endif
+#if defined(DEBUG_COLORMAP)
 	// Show colormap
 	ALBEDO = color_map.rgb;
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_ROUGHMAP)
+#endif
+#if defined(DEBUG_ROUGHMAP)
 	// Show roughness map
 	ALBEDO = vec3(color_map.a);
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_CONTROL_TEXTURE)
+#endif
+#if defined(DEBUG_CONTROL_TEXTURE)
 	// Show control map texture selection
 	float __ctrl_base = weight_inv * (
 	float(mat[0].base) * weights.x +
@@ -56,8 +55,8 @@
 	ROUGHNESS = 1.;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_CONTROL_BLEND)
+#endif
+#if defined(DEBUG_CONTROL_BLEND)
 	// Show control map blend values
 	float __ctrl_blend = weight_inv * (
 	float(mat[0].blend) * weights.x +
@@ -68,41 +67,45 @@
 	ROUGHNESS = 1.;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_AUTOSHADER)
+#endif
+#if defined(DEBUG_AUTOSHADER)
 	ivec3 __ruv = get_region_uv(floor(uv));
 	uint __control = texelFetch(_control_maps, __ruv, 0).r;
 	float __autoshader = float( bool(__control & 0x1u) || __ruv.z<0 );
 	ALBEDO = vec3(__autoshader);
 	ROUGHNESS = 1.;
 	SPECULAR = 0.;
-
+#endif
 
 // !!!!!!!!!  Todo: DEBUG_HOLES  !!!!!!!!!!!
 
-
-#elif defined(DEBUG_TEXTURE_HEIGHT)
+#if defined(DEBUG_TEXTURE_HEIGHT)
 	// Show height textures
-	ALBEDO = vec3(albedo_height.a);
+	ALBEDO = vec3(mixed_mat[MXD_ALBEDO].a);
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_TEXTURE_NORMAL)
+#endif
+#if defined(DEBUG_TEXTURE_NORMAL)
 	// Show normal map textures
-	ALBEDO = normal_rough.rgb;
+	ALBEDO = mixed_mat[MXD_NORMAL].rgb;
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
-
-#elif defined(DEBUG_TEXTURE_ROUGHNESS)
+#endif
+#if defined(DEBUG_TEXTURE_ROUGHNESS)
 	// Show roughness textures
-	ALBEDO = vec3(normal_rough.a);
+	ALBEDO = vec3(mixed_mat[MXD_NORMAL].a);
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.;
 	NORMAL_MAP = vec3(0.5, 0.5, 1.0);
+#endif
 
-#elif defined(DEBUG_VERTEX_GRID)
+#if defined(CARTOGRAPHY_OVERLAYS)
+#include "res://addons/terrain_3d/shader/mods/t3d_carto_inline.gdshaderinc"
+#endif
+
+#if defined(DEBUG_VERTEX_GRID)
 	// Show region and vertex grids
 	vec3 __pixel_pos = (INV_VIEW_MATRIX * vec4(VERTEX,1.0)).xyz;
 	float __camera_dist = length(v_camera_pos - __pixel_pos);

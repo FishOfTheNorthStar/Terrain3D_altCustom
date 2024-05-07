@@ -1,6 +1,42 @@
-R"(
+// *****************************************************************************
+#if !defined(__T3D_INTERNAL_GLOBALS_AVAILABLE__)
+// REQUIRED EXTERNAL TYPES:
+// "Material" (struct): Provided by
+//#include "res://addons/terrain_3d/shader/core/t3d_material_def.gdshaderinc"
+// *****************************************************************************
+// REQUIRED EXTERNAL FUNCTIONS:
+//
+// "get_materials"
+//Material[4] get_materials( vec2 _uv, vec4 _g, uvec4 _c, ivec4 _n, vec4 _a) { Material _m[4]; return _m; }	//defined within "res://addons/terrain_3d/shader/core/t3d_deliver_mixed_mat_funcs.gdshaderinc"
+//
+// "P_TINT_NZ_SCL" -> vec3
+//vec3 P_TINT_NZ_SCL() { return vec3(0.); } 	// Provides the tint noise scales.  This code uses the Z index for tint noise 3
+//
+// "blend_weights_x4" -> vec4 : Defined with t3d_standard_functions
+//vec4 blend_weights_x4(vec4 _p1, vec4 _p2) { return vec4(0.); }
+// *****************************************************************************
+// REQUIRED EXTERNAL SAMPLERS:
+//uniform sampler2D noise_texture;
+// *****************************************************************************
+// REQUIRED EXTERNAL LOCAL/INLINE INPUTS:
+// "uv" (vec2)
+// "RTX_GRAD" (vec4): The world space texture derivatives, xy is dFdX() and zw is dFdY()
+// *****************************************************************************
+// REQUIRED EXTERNAL VARYINGS:
+// "v_control" flat uvec4: The control data for this texel and it's Right/Down and Right+Down neighbors
+// "v_neighbors" flat ivec4
+// "v_rangles" flat vec4: The random texture angle of this texl and it's neighbors
+// *****************************************************************************
+//	const vec2 uv 			= vec2(0.);
+//	const vec4 RTX_GRAD 	= vec4(0.);
+//	
+//	const uvec4	v_control 	= uvec4(0);
+//	const ivec4	v_neighbors	= ivec4(0);
+//	const vec4 	v_rangles 	= vec4(0.);
+// *****************************************************************************
+#endif
 
-//INSERT: UV_DISTORT
+// UV_DISTORT
 // UV distortion
 
 const float TEMP_UVD_DISTORTION_POWER = 0.6;
@@ -104,8 +140,8 @@ vec2 RUN_DUV_SET(vec2 _origUV, vec3[__UVD_PASSES_PER_SET] _set,
 
 vec2 UV_DISTORT_IF_ENABLED(vec2 _uv_) { return RUN_DUV_SET(_uv_, _default_uvd_set,25.0 * _uv_distortion_size * _uv_distortion_power,0.0,0.01/max(0.0001, _uv_distortion_size) ); }
 
-//INSERT: UV_DISTORT_DISABLED
 
-vec2 UV_DISTORT_IF_ENABLED(vec2 _uv_) { return vec2(0.0); }
-
-)"
+// UV_DISTORT_DISABLED
+//
+//vec2 UV_DISTORT_IF_ENABLED(vec2 _uv_) { return vec2(0.0); }
+//

@@ -32,24 +32,8 @@ void Terrain3DMaterial::_preload_shaders() {
 #include "shaders/__HEADER.glsl"
 			, "header");
 	_parse_shader(
-#include "shaders/uniforms.glsl"
-			, "uniforms");
-	_parse_shader(
-#include "shaders/world_noise.glsl"
-			, "world_noise");
-	_parse_shader(
-#include "shaders/uv_distortion.glsl"
-			, "uv_distort");
-	_parse_shader(
-#include "shaders/auto_shader.glsl"
-			, "auto_shader");
-	_parse_shader(
-#include "shaders/dual_scaling.glsl"
-			, "multi_scaling");
-	_parse_shader(
 #include "shaders/editor_functions.glsl"
 			, "editor_functions");
-
 	// Load main code
 	_shader_code["main"] = String(
 #include "shaders/main.glsl"
@@ -165,7 +149,14 @@ String Terrain3DMaterial::_get_current_defines() {
 	_add_if_true(_defs, _uv_distortion_enabled,			"UV_DISTORTION_ENABLED");
 	_add_if_true(_defs, _texture_filtering == LINEAR,	"TEXTURE_SAMPLERS_LINEAR",	"TEXTURE_SAMPLERS_NEAREST");
 	_add_if_true(_defs, _auto_shader_enabled,			"AUTO_SHADER_ENABLED");
+	_add_if_true(_defs, _feature_shader_enabled,		"FEATURE_SHADER_ENABLED");
 	_add_if_true(_defs, _multi_scale_enabled,			"MULTI_SCALING_ENABLED");
+	_add_if_true(_defs, _adjust_aorms_enabled,			"ADJUST_AORMS_ENABLED");
+	_add_if_true(_defs, _strata_gradient_enabled,		"STRATA_GRADIENT_ENABLED");
+	_add_if_true(_defs, _vegetation_enabled,			"VEGETATION_ENABLED");
+	_add_if_true(_defs, _vegetation_raise_enabled,		"VEGETATION_RAISE_HEIGHT");
+	_add_if_true(_defs, _rain_enabled,					"RAIN_ENABLED");
+	_add_if_true(_defs, _rain_puddles_enabled,			"RAIN_PUDDLES_ENABLED");
 	_add_if_true(_defs, _debug_view_checkered,			"DEBUG_CHECKERED");
 	_add_if_true(_defs, _debug_view_grey,				"DEBUG_GREY");
 	_add_if_true(_defs, _debug_view_heightmap,			"DEBUG_HEIGHTMAP");
@@ -178,6 +169,10 @@ String Terrain3DMaterial::_get_current_defines() {
 	_add_if_true(_defs, _debug_view_texture_height,		"DEBUG_TEXTURE_HEIGHT");
 	_add_if_true(_defs, _debug_view_texture_normal,		"DEBUG_TEXTURE_NORMAL");
 	_add_if_true(_defs, _debug_view_texture_rough,		"DEBUG_TEXTURE_ROUGHNESS");
+	_add_if_true(_defs, _debug_view_cartographer,		"CARTOGRAPHY_OVERLAYS");
+	_add_if_true(_defs, _debug_view_cartographer_elevation,				"CARTO_ELEV_LINES");	// Depreciated and will be removed
+	_add_if_true(_defs, _debug_view_cartographer_grid,					"CARTO_GRID_LINES");	// ""
+	_add_if_true(_defs, _debug_view_cartographer_features,				"CARTO_FEAT_LINES");	// ""
 	_add_if_true(_defs, _debug_view_vertex_grid,		"DEBUG_VERTEX_GRID");
 	_add_if_true(_defs, _debug_view_navigation,			"EDITOR_NAVIGATION");
 	String o= "";
@@ -203,20 +198,10 @@ String Terrain3DMaterial::_add_or_update_header(String _to_code, String _explici
 	o = _add_if_exists(o, "HEADER");
 	
 	// First add the uniform variables and any varyings used by enabled options
-	o = _add_if_enabled(o, _texture_filtering == LINEAR, "TEXTURE_SAMPLERS_LINEAR",		"TEXTURE_SAMPLERS_NEAREST");
-	//o = _add_if_enabled(o, _multi_scale_enabled,		 "MULTI_SCALING_UNIFORMS");  // This doesn't work yet.  It patches the code with the uniforms needed 
-	//o = _add_if_enabled(o, _auto_shader_enabled,		 "AUTO_SHADER_UNIFORMS");	 // just fine, but updating the shader throws errors about un-covered Uniforms
-	//o = _add_if_enabled(o, _world_background == NOISE, "WORLD_NOISE_UNIFORMS");	 // so I guess it's caching some uniform index list and changing that at runtime is 
-																					 //	a problem, for now.  That may change in the future though so if it does, these
-																					 //	commented lines would help keep the shader header a lot more concise.  For
-																					 //	now they're all in the header.
-	
+	//o = _add_if_enabled(o, _texture_filtering == LINEAR, "TEXTURE_SAMPLERS_LINEAR",		"TEXTURE_SAMPLERS_NEAREST");
+
 	// Then, add any required functions (or the disabled versions of those functions)
 	o = _add_if_enabled(o, _auto_shader_enabled,		 "AUTO_SHADER_TEXTURE_ID",			"TEXTURE_ID");
-	o = _add_if_enabled(o, _world_background >= NOISE_1, ( _world_background == NOISE_1 
-															? "WORLD_NOISE_FUNCS_MODE_1" 
-															: "WORLD_NOISE_FUNCS_MODE_2" ),	"WORLD_NOISE_DISABLED");
-	o = _add_if_enabled(o, _uv_distortion_enabled,		 "UV_DISTORT",						"UV_DISTORT_DISABLED");
 
 	// Most importantly, add this header end mark so the next step can now how to 
 	// remove the header, next time it updates.  Also put a banner over it to warn
@@ -231,16 +216,7 @@ String Terrain3DMaterial::_add_or_update_header(String _to_code, String _explici
 String Terrain3DMaterial::_generate_shader_code(String _explicitDefines) {
 	LOG(INFO, "Generating default shader code");
 	Array excludes;
-//	excludes.push_back("DEFINES");
-//	excludes.push_back("HEADER");
-	excludes.push_back("TEXTURE_SAMPLERS_LINEAR");
-	excludes.push_back("TEXTURE_SAMPLERS_NEAREST");
-	excludes.push_back("AUTO_SHADER_TEXTURE_ID");
-	excludes.push_back("TEXTURE_ID");
-	excludes.push_back("UV_DISTORT");
-	excludes.push_back("UV_DISTORT_DISABLED");
-//	excludes.push_back("MULTI_SCALING_UNIFORMS");
-//	excludes.push_back("AUTO_SHADER_UNIFORMS");
+	//excludes.push_back("TEXTURE_SAMPLERS_LINEAR");
 	String shader = _add_or_update_header(_apply_inserts(_shader_code["main"], excludes), _explicitDefines);
 	return shader; }
 
@@ -314,62 +290,7 @@ void Terrain3DMaterial::_update_shader() {
 // ################################################################################
 #pragma region _DEBUG_VIEWS_
 
-void Terrain3DMaterial::set_debug_view_checkered(bool p_enabled) {
-	LOG(INFO, "Enable debug_view_checkered: ", p_enabled);
-	_debug_view_checkered = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_grey(bool p_enabled) {
-	LOG(INFO, "Enable show_grey: ", p_enabled);
-	_debug_view_grey = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_heightmap(bool p_enabled) {
-	LOG(INFO, "Enable show_heightmap: ", p_enabled);
-	_debug_view_heightmap = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_colormap(bool p_enabled) {
-	LOG(INFO, "Enable show_colormap: ", p_enabled);
-	_debug_view_colormap = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_roughmap(bool p_enabled) {
-	LOG(INFO, "Enable show_roughmap: ", p_enabled);
-	_debug_view_roughmap = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_control_texture(bool p_enabled) {
-	LOG(INFO, "Enable show_control_texture: ", p_enabled);
-	_debug_view_control_texture = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_control_blend(bool p_enabled) {
-	LOG(INFO, "Enable show_control_blend: ", p_enabled);
-	_debug_view_control_blend = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_autoshader(bool p_enabled) {
-	LOG(INFO, "Enable show_autoshader: ", p_enabled);
-	_debug_view_autoshader = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_holes(bool p_enabled) {
-	LOG(INFO, "Enable show_holes: ", p_enabled);
-	_debug_view_holes = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_navigation(bool p_enabled) {
-	LOG(INFO, "Enable show_navigation: ", p_enabled);
-	_debug_view_navigation = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_texture_height(bool p_enabled) {
-	LOG(INFO, "Enable show_texture_height: ", p_enabled);
-	_debug_view_texture_height = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_texture_normal(bool p_enabled) {
-	LOG(INFO, "Enable show_texture_normal: ", p_enabled);
-	_debug_view_texture_normal = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_texture_rough(bool p_enabled) {
-	LOG(INFO, "Enable show_texture_rough: ", p_enabled);
-	_debug_view_texture_rough = p_enabled;
-	_update_shader(); }
-void Terrain3DMaterial::set_debug_view_vertex_grid(bool p_enabled) {
-	LOG(INFO, "Enable show_vertex_grid: ", p_enabled);
-	_debug_view_vertex_grid = p_enabled;
-	_update_shader(); }
+MAKE_DEBUG_VIEW_FUNCTIONS() 
 
 #pragma endregion _DEBUG_VIEWS_ 
 // ################################################################################
@@ -487,13 +408,16 @@ void Terrain3DMaterial::_generate_region_blend_map() {
 }
 
 // Called from signal connected in Terrain3D, emitted by texture_list
-// Expected Arguments are as follows, * set is optional
+// Expected Arguments are as follows, * set is optional, * * set is also optional (but * set is not if ** set is to be used.)
 // 0: texture count
 // 1: albedo tex array
 // 2: normal tex array
 // 3: uv color array *
 // 4: uv scale array *
 // 5: uv rotation array *
+// 6: spec adjust array * *
+// 7: solid color array * *
+// 8: user data array * *
 void Terrain3DMaterial::_update_texture_arrays(const Array &p_args) {
 	if (!_initialized) {
 		return;
@@ -510,7 +434,7 @@ void Terrain3DMaterial::_update_texture_arrays(const Array &p_args) {
 	_safe_material_set_param( "_texture_array_albedo", albedo_array);
 	_safe_material_set_param( "_texture_array_normal", normal_array);
 
-	if (p_args.size() == 6) {
+	if (p_args.size() >= 6) {
 		PackedColorArray colors = p_args[3];
 		PackedFloat32Array uv_scales = p_args[4];
 		PackedFloat32Array uv_rotations = p_args[5];
@@ -518,6 +442,15 @@ void Terrain3DMaterial::_update_texture_arrays(const Array &p_args) {
 		_safe_material_set_param( "_texture_color_array", colors);
 		_safe_material_set_param( "_texture_uv_scale_array", uv_scales);
 		_safe_material_set_param( "_texture_uv_rotation_array", uv_rotations);
+	}
+
+	if (p_args.size() >= 9) {
+		PackedFloat32Array specadjusts = p_args[6];
+		PackedColorArray solidcolors = p_args[7];
+		PackedColorArray userdata = p_args[8];
+		_safe_material_set_param( "_texture_specadjust_array", specadjusts);
+		_safe_material_set_param( "_texture_solidcolor_array", solidcolors);
+		_safe_material_set_param( "_texture_userdata_array", userdata);
 	}
 
 	// Enable checkered view if texture_count is 0, disable if not
@@ -709,20 +642,6 @@ void Terrain3DMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
 			pi.usage = PROPERTY_USAGE_EDITOR;
 			p_list->push_back(pi);
 
-			// For setting custom tooltip text reference, temp, see-> tile_set_scenes_collection_source_editor.cpp
-			// https://github.com/godotengine/godot/blob/master/editor/plugins/tiles/tile_set_scenes_collection_source_editor.cpp#L362
-			// scenes_collection_source_inspector->add_custom_property_description("TileSetScenesCollectionProxyObject", "id", TTR("The tile's unique identifier within this TileSet. Each tile stores its source ID, so changing one may make tiles invalid."));
-			// EI->get_inspector()->add_custom_property_description(
-			/*
-			String _the_class_name = __class__; // "Terrain3DMaterial"
-			TypedArray<Node> _propCons = TypedArray<Node>();
-			_propCons = EI->get_inspector()->get_child(0, true)->get_children();
-			TypedArray<String> _names = Terrain3D::_temp_util_set_prop_tooltips(_propCons);
-			for (int _cnum = 0; _cnum < _names.size(); _cnum++) {
-				String _o = "Inspector Child #" + (String)_names[_cnum];
-				LOG(WARN, _o);
-			}
-			*/
 			// Store this param in a dictionary that is saved in the resource file
 			// Initially set with default value
 			// Also acts as a cache for _get

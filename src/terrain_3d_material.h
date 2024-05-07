@@ -9,7 +9,8 @@
 #include <godot_cpp/classes/noise_texture2d.hpp>
 
 #include "generated_tex.h"
-#include "__MACROS.h"
+//#include "__MACROS.h"
+#include "propsets/ALL_SETS.h"
 
 using namespace godot;
 
